@@ -4,6 +4,8 @@ const request = require('supertest')
 const {app} = require('./../server.js')
 const {Todo} = require('./../models/todo.js')
 
+//Note: In Mongoose, models can be used to connect to the DBs even the instance of that is not created 
+
 
 // Make sure DB  is clean before we test the todos. This run for every test
 beforeEach((done)=>{
