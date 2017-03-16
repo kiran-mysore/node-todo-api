@@ -91,3 +91,7 @@ adminUser.save().then((user)=>{
 },(err)=>{
     console.log('Unable to save the user document',err)
 })*/
+
+module.exports = {
+    app
+}
