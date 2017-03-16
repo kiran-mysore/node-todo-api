@@ -6,10 +6,21 @@ const {Todo} = require('./../models/todo.js')
 
 //Note: In Mongoose, models can be used to connect to the DBs even the instance of that is not created 
 
+// Create some seed todos
+const todos = [
+    {
+         text: 'This is first todo from seed'
+    },
+    {
+        text:'This is second todo from seed'
+    }
+]
 
 // Make sure DB  is clean before we test the todos. This run for every test
-beforeEach((done)=>{
+beforeEach((done)=> {
     Todo.remove({}).then(()=>{
+        return Todo.insertMany(todos) // Return a promise
+    }).then(()=>{
         done()
     })
 })
@@ -31,7 +42,7 @@ describe('POST /todos',()=>{
                     return done(err)
                 }
                 
-                Todo.find().then((todos)=>{
+                Todo.find({text}).then((todos)=>{
                     expect(todos.length).toBe(1)
                     expect(todos[0].text).toBe(text)
 
@@ -54,7 +65,7 @@ describe('POST /todos',()=>{
                     return done(err)
                 }
                 Todo.find().then((todos)=>{
-                expect(todos.length).toBe(0)
+                expect(todos.length).toBe(2)
                // expect(todos[0]).toBe('')
                done()
             }).catch((err)=>{
@@ -62,4 +73,18 @@ describe('POST /todos',()=>{
             })
         })  
     })
+})
+
+
+describe('GET /todos',()=>{
+    it('should get all the todos',(done)=>{
+        request(app)
+            .get('/todos')
+            .expect(200)
+            .expect((res)=>{
+                expect(res.body.todos.length).toBe(2)
+            })
+             .end(done)
+    })
+
 })
