@@ -1,5 +1,6 @@
 const express = require('express')
 const bodyParser = require('body-parser')
+const {ObjectID} = require('mongodb')
 
 // Local imports
 const {mongoose} = require('./db/mongoose.js')
@@ -34,6 +35,26 @@ app.get('/todos',(req,res)=>{
     },(err)=>{
          res.status(400).send(err)
     })
+})
+
+// Get todo by id
+app.get('/todos/:id',(req,res)=>{
+    //res.send(req.params)
+    let todoId = req.params.id
+    if(!ObjectID.isValid(todoId)){
+        res.status(404).send() // Nothing to send
+    }else{
+        Todo.findById(todoId).then((todo)=>{
+            if(!todo){
+                console.log('The ID does not exist')
+                res.status(404).send() // Nothing to send
+            }
+            res.send({todo})
+        }).catch((err)=>{
+            res.status(400).send()
+        })
+    }
+
 })
 
 // Server listening
