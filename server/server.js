@@ -46,7 +46,7 @@ app.get('/todos/:id',(req,res)=>{
     }else{
         Todo.findById(todoId).then((todo)=>{
             if(!todo){
-                console.log('The ID does not exist')
+                //console.log('The ID does not exist')
                 res.status(404).send() // Nothing to send
             }
             res.send({todo})

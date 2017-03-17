@@ -1,5 +1,7 @@
+const {ObjectID} = require('mongodb')
 const expect  = require('expect')
 const request = require('supertest')
+
 
 const {app} = require('./../server.js')
 const {Todo} = require('./../models/todo.js')
@@ -8,13 +10,15 @@ const {Todo} = require('./../models/todo.js')
 
 // Create some seed todos
 const todos = [
-    {
+    {   
+         _id: new ObjectID(),
          text: 'This is first todo from seed'
     },
     {
+        _id: new ObjectID(),
         text:'This is second todo from seed'
     }
-]
+];
 
 // Make sure DB  is clean before we test the todos. This run for every test
 beforeEach((done)=> {
@@ -87,4 +91,32 @@ describe('GET /todos',()=>{
              .end(done)
     })
 
+})
+
+describe('GET /todos/:id',()=>{
+    it('should return a todo for an ID',(done)=>{
+        request(app)
+        .get((`/todos/${todos[0]._id.toHexString()}`))
+        .expect(200)
+        .expect((res)=>{
+            expect(res.body.todo.text).toBe(todos[0].text)
+        })
+        .end(done)
+    })
+
+    it('should return 404 error if todo not found',(done)=>{
+        let dummyID = new ObjectID()
+        request(app)
+        .get((`/todos/${dummyID.toHexString()}`))
+        .expect(404)
+        .end(done)
+
+    })
+
+    it('should return 404 if non-object IDs',(done)=>{
+        request(app)
+        .get('/todos/123')
+        .expect(404)
+        .end(done)
+    })
 })
