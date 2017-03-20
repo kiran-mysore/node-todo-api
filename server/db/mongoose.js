@@ -6,7 +6,8 @@ let dbURI = {
     localhost:'mongodb://localhost:27017/TodoApp',
     mlab:'mongodb://todouser:todouser123@ds135680.mlab.com:35680/tododb'
 }
-mongoose.connect(dbURI.localhost || dbURI.mlab)
+mongoose.connect( process.env.PORT ? dbURI.mlab : dbURI.localhost)
+//mongoose.connect(dbURI.localhost || dbURI.mlab)
 
 module.exports= {
     mongoose
