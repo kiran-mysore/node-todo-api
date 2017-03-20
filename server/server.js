@@ -46,7 +46,7 @@ app.get('/todos/:id',(req,res)=>{
     //res.send(req.params)
     let todoId = req.params.id
     if(!ObjectID.isValid(todoId)){
-        res.status(404).send() // Nothing to send
+        res.status(404).send() // Nothing but 404 error status
     }else{
         Todo.findById(todoId).then((todo)=>{
             if(!todo){
@@ -59,6 +59,23 @@ app.get('/todos/:id',(req,res)=>{
         })
     }
 
+})
+
+// Delete todo by id
+app.delete('/todos/:id',(req,res)=>{
+    let todoId = req.params.id
+    if(!ObjectID.isValid(todoId)){
+        res.status(404).send() // Nothing but 404 error status
+    }else{
+        Todo.findByIdAndRemove(todoId).then((todo)=>{
+            if(!todo){// If no IDs found
+                res.status(404).send() // Nothing but 404 error status
+            } 
+            res.send({todo})
+        }).catch((err)=>{
+            res.status(400).send()
+        })
+    }
 })
 
 // Server listening
