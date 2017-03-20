@@ -96,7 +96,7 @@ describe('GET /todos',()=>{
 describe('GET /todos/:id',()=>{
     it('should return a todo for an ID',(done)=>{
         request(app)
-        .get((`/todos/${todos[0]._id.toHexString()}`))
+        .delete((`/todos/${todos[0]._id.toHexString()}`))
         .expect(200)
         .expect((res)=>{
             expect(res.body.todo.text).toBe(todos[0].text)
@@ -116,6 +116,46 @@ describe('GET /todos/:id',()=>{
     it('should return 404 if non-object IDs',(done)=>{
         request(app)
         .get('/todos/123')
+        .expect(404)
+        .end(done)
+    })
+})
+
+describe('DELETE /todos/:id',()=>{
+    it('should delete to todo',(done)=>{
+        let hexTodoId = todos[1]._id.toHexString()
+
+        request(app)
+        .delete(`/todos/${hexTodoId}`)
+        .expect(200)
+        .expect((res)=>{
+            expect(res.body.todo._id).toBe(hexTodoId)
+        })
+        .end((err,res)=>{
+            if(err){
+               return done(err)
+            }
+           // Query the DB to find the deleted id does not exist
+           Todo.findById(hexTodoId).then((todo)=>{
+             expect(todo).toNotExist()
+             done()
+           }).catch((err)=>{
+                 done(err)
+            })
+        })
+    })
+
+    it('should return a 404 error if ID not found',(done)=>{
+        let dummyID = new ObjectID()
+        request(app)
+        .delete((`/todos/${dummyID.toHexString()}`))
+        .expect(404)
+        .end(done)
+    })
+
+    it('should return 404 error if the ID is not valid',(done)=>{
+        request(app)
+        .delete('/todos/123')
         .expect(404)
         .end(done)
     })
