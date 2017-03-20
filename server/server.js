@@ -10,6 +10,10 @@ const{User} = require('./models/user.js')
 // Create app
 const app = express()
 
+// Set the port for deployment(Heoku) or defualt local port
+const port = process.env.PORT || 3000
+
+
 // configure the body-parser middleware to receive json from the client
 app.use(bodyParser.json())
 
@@ -58,8 +62,8 @@ app.get('/todos/:id',(req,res)=>{
 })
 
 // Server listening
-app.listen(3000,()=>{
-    console.log('Started on port : 3000')
+app.listen(port,()=>{
+    console.log(`Server started at port : ${port}`)
 })
 
 
