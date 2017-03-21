@@ -1,6 +1,8 @@
+const _= require('lodash')
 const express = require('express')
 const bodyParser = require('body-parser')
 const {ObjectID} = require('mongodb')
+
 
 // Local imports
 const {mongoose} = require('./db/mongoose.js')
@@ -66,7 +68,7 @@ app.delete('/todos/:id',(req,res)=>{
     let todoId = req.params.id
     if(!ObjectID.isValid(todoId)){
         res.status(404).send() // Nothing but 404 error status
-    }else{
+    }
         Todo.findByIdAndRemove(todoId).then((todo)=>{
             if(!todo){// If no IDs found
                 res.status(404).send() // Nothing but 404 error status
@@ -75,7 +77,42 @@ app.delete('/todos/:id',(req,res)=>{
         }).catch((err)=>{
             res.status(400).send()
         })
+    
+})
+
+// Update a todo
+// We are using a PATCH method because we just update few properties. 
+// We could have used PUT if we completely replacing the object.
+app.patch('/todos/:id',(req,res)=>{
+    
+    let todoId = req.params.id
+
+    // grab the text and the completed properties from the request body
+    let body = _.pick(req.body,['text','completed'])
+
+    if(!ObjectID.isValid(todoId)){
+       res.status(404).send() // Nothing but 404 error status
     }
+
+    if(_.isBoolean(body.completed) && body.completed){
+        body.completedAt = new Date().getTime()
+    }else{
+        body.completed = false
+        body.completedAt = null
+    }
+
+    // Now Update the DB 
+    // new:true will make not return the old document which was updated. This is mongoose specific
+    Todo.findByIdAndUpdate(todoId,{$set:body},{new:true}).then((todo)=>{
+        if(!todo){
+            return res.status(404).send()
+        }
+
+        // If updated send the todo object back as response
+        res.send({todo})
+    }).catch((err)=>{
+        res.status(400).send()
+    }) 
 })
 
 // Server listening
