@@ -33,6 +33,12 @@ const UserSchema = new mongoose.Schema({
     }]
 })
 
+/* Note:Database logic should be encapsulated within the data model. Mongoose provides 2 ways of doing     this, methods and statics.
+ Methods adds an instance method to documents 
+ Statics adds static "class" methods to the Models itself.
+ */
+
+
 /*This is mongoose specific method used to send the properties that we want to send back and avoid sending sensitive data*/
 
 UserSchema.methods.toJSON = function(){
@@ -56,8 +62,28 @@ UserSchema.methods.generateAuthToken = function(){ // I am using regukar fun as 
     })
 
 }
+
+// Create a statis method on the model
+UserSchema.statics.findByToken  = function(token){
+    let User = this // this is like a Class static variable hence in capital letter U
+    let decoded
+    try {
+        decoded = jwt.verify(token,'SecretSalt')
+    } catch (error) {
+        /*        return new Promise((resolve,reject)=>{
+                    reject()
+                })*/
+        return Promise.reject()        
+    }
+    return User.findOne({
+        '_id':decoded._id,
+        'tokens.token':token, // Looking for a nested property in the model object
+        'tokens.access':'auth' // Looking for a nested property in the model object
+    })
+}
+
 // Create a User Model
-const User = mongoose.model('User',UserSchema)
+const UserModel = mongoose.model('User',UserSchema)
 
 /*const User = mongoose.model('User',{
     email:{
@@ -90,5 +116,5 @@ const User = mongoose.model('User',UserSchema)
 
 
 module.exports = {
-    User
+    UserModel
 }

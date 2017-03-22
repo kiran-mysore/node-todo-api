@@ -8,7 +8,8 @@ const {ObjectID} = require('mongodb')
 // Local imports
 const {mongoose} = require('./db/mongoose.js')
 const{Todo} = require('./models/todo.js')
-const{User} = require('./models/user.js')
+const{UserModel} = require('./models/user.js')
+const {authenticate} = require('./middleware/authenticate.js')
 
 // Create app
 const app = express()
@@ -125,7 +126,7 @@ app.post('/users',(req,res)=>{
     let body = _.pick(req.body,['email','password'])
 
     // Create a new Instance of the user-model
-    let user = new User(body) // Note: here body is an object
+    let user = new UserModel(body) // Note: here body is an object
 
     // Save the user to the DB
     user.save().then(()=>{
@@ -142,6 +143,26 @@ app.post('/users',(req,res)=>{
     })
 
 })
+
+
+
+app.get('/users/me',authenticate,(req,res)=>{
+        res.send(req.user)
+    })
+
+
+/*app.get('/users/me',(req,res)=>{
+    let token = req.header('x-auth')
+    UserModel.findByToken(token).then((user)=>{
+        if(!user){
+            Promise.reject()
+        }
+        res.send(user)
+    }).catch((err)=>{
+        res.status(401).send(err) // Authentication required error
+    })
+
+})*/
 
 // Server listening
 app.listen(port,()=>{
