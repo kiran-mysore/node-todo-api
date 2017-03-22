@@ -2,6 +2,7 @@ const mongoose = require('mongoose')
 const validator = require('validator') // npm library for various validations
 const jwt = require('jsonwebtoken')
 const _ = require('lodash')
+const bcrypt = require('bcryptjs')
 
 const UserSchema = new mongoose.Schema({
     email:{
@@ -63,7 +64,7 @@ UserSchema.methods.generateAuthToken = function(){ // I am using regukar fun as 
 
 }
 
-// Create a statis method on the model
+// Create a statics method on the model
 UserSchema.statics.findByToken  = function(token){
     let User = this // this is like a Class static variable hence in capital letter U
     let decoded
@@ -81,6 +82,25 @@ UserSchema.statics.findByToken  = function(token){
         'tokens.access':'auth' // Looking for a nested property in the model object
     })
 }
+
+// Run this before saving the User document in the DB
+UserSchema.pre('save',function(next){
+    let user = this
+    // Check if the password has changed
+    if(user.isModified('password')){
+        // if modified, set the new hash as the password
+        bcrypt.genSalt(10,(err,salt)=>{ // more the number harder to crack the password
+            bcrypt.hash(user.password,salt,(err,hash)=>{
+                //console.log(hash)
+                user.password = hash
+                next()
+            })
+        })
+        
+    }else{
+        next()
+    }
+})
 
 // Create a User Model
 const UserModel = mongoose.model('User',UserSchema)
