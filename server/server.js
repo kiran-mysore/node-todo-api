@@ -116,6 +116,33 @@ app.patch('/todos/:id',(req,res)=>{
     }) 
 })
 
+/*POST /users routes*/
+
+app.post('/users',(req,res)=>{
+    //console.log(req.body) // Output the request from the client - which is json now.
+
+    // grab the email and password properties from the request body
+    let body = _.pick(req.body,['email','password'])
+
+    // Create a new Instance of the user-model
+    let user = new User(body) // Note: here body is an object
+
+    // Save the user to the DB
+    user.save().then(()=>{
+        return user.generateAuthToken()
+        //res.status(200).send({savedUser})
+    }).then((token)=>{
+        
+        // Send this token as the http header
+        res.header('x-auth',token).send(user)
+        
+    })
+    .catch((err)=>{
+        res.status(400).send(err)
+    })
+
+})
+
 // Server listening
 app.listen(port,()=>{
     console.log(`Server started at port : ${port}`)
