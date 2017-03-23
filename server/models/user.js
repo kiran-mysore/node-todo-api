@@ -64,6 +64,18 @@ UserSchema.methods.generateAuthToken = function(){ // I am using regukar fun as 
 
 }
 
+UserSchema.methods.removeToken = function(authenticatedToken){
+    let user = this
+
+    return user.update({
+                    $pull :{ // $pull is mondb operator
+                        tokens:{
+                            token:authenticatedToken
+                        }
+                    }
+             })
+}
+
 // Create a statics method on the model
 UserSchema.statics.findByToken  = function(token){
     let User = this // this is like a Class static variable hence in capital letter U
