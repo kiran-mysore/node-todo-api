@@ -57,3 +57,6 @@ typings/
 
 # dotenv environment variables file
 .env
+
+#ignore the config.json file
+server/config/config.json

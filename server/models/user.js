@@ -52,7 +52,7 @@ UserSchema.methods.toJSON = function(){
 UserSchema.methods.generateAuthToken = function(){ // I am using regukar fun as I need this
     let user = this
     let access = 'auth'
-    let token = jwt.sign({_id:user._id.toHexString(),access:access},'SecretSalt').toString()
+    let token = jwt.sign({_id:user._id.toHexString(),access:access},process.env.JWT_SECRET).toString()
    
     // add the token values into the User token array
     user.tokens.push({access:access,token:token})
@@ -81,7 +81,7 @@ UserSchema.statics.findByToken  = function(token){
     let User = this // this is like a Class static variable hence in capital letter U
     let decoded
     try {
-        decoded = jwt.verify(token,'SecretSalt')
+        decoded = jwt.verify(token,process.env.JWT_SECRET)
     } catch (error) {
         /*        return new Promise((resolve,reject)=>{
                     reject()
