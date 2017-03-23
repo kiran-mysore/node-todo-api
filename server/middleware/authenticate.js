@@ -5,7 +5,7 @@ const authenticate = (req,res,next)=>{
     let token = req.header('x-auth')
     UserModel.findByToken(token).then((user)=>{
         if(!user){
-            Promise.reject()
+           return Promise.reject()
         }
         
         // update the request object
