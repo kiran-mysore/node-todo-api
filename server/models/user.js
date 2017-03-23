@@ -83,6 +83,29 @@ UserSchema.statics.findByToken  = function(token){
     })
 }
 
+UserSchema.statics.findByCredentials = function(email,password){
+    let User = this
+   return User.findOne({email}).then((user)=>{
+          if(!user){
+            return Promise.reject()
+         }
+
+         // Since bcryptjs does not use promises, we have to manually return a promise
+         return new Promise((resolve,reject)=>{
+            
+            // Now compare the passwords
+            bcrypt.compare(password,user.password,(err,result)=>{
+               if(result){
+                   resolve(user)
+               }else{
+                   reject()
+               }
+            })
+         })
+
+    })
+}
+
 // Run this before saving the User document in the DB
 UserSchema.pre('save',function(next){
     let user = this

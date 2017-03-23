@@ -151,6 +151,23 @@ app.get('/users/me',authenticate,(req,res)=>{
     })
 
 
+app.post('/users/login',(req,res)=>{
+     // grab the email and password properties from the request body
+     let body = _.pick(req.body,['email','password'])
+     //res.send(body)
+
+     UserModel.findByCredentials(body.email,body.password).then((user)=>{
+         return user.generateAuthToken().then((token)=>{
+            // Send this token as the http header
+            res.header('x-auth',token).send(user)
+        })
+     }).catch((err)=>{
+         res.status(400).send()
+     })
+})
+
+
+
 /*app.get('/users/me',(req,res)=>{
     let token = req.header('x-auth')
     UserModel.findByToken(token).then((user)=>{
