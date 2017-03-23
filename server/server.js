@@ -23,10 +23,11 @@ app.use(bodyParser.json())
 
 // Routes
 // Create a new Todo
-app.post('/todos',(req,res)=>{
+app.post('/todos',authenticate,(req,res)=>{
     console.log(req.body) // Output the request from the client - which is json now.
     let todo = new Todo({
-        text:req.body.text
+        text:req.body.text,
+        _creator:req.user._id
     })
     todo.save().then((doc)=>{
         res.send(doc)
@@ -37,8 +38,10 @@ app.post('/todos',(req,res)=>{
 })
 
 // Get all the todos
-app.get('/todos',(req,res)=>{
-    Todo.find().then((todos)=>{
+app.get('/todos',authenticate,(req,res)=>{
+    Todo.find({
+        _creator:req.user._id
+    }).then((todos)=>{
         res.send({todos})
     },(err)=>{
          res.status(400).send(err)
@@ -46,13 +49,16 @@ app.get('/todos',(req,res)=>{
 })
 
 // Get todo by id
-app.get('/todos/:id',(req,res)=>{
+app.get('/todos/:id',authenticate,(req,res)=>{
     //res.send(req.params)
     let todoId = req.params.id
     if(!ObjectID.isValid(todoId)){
         res.status(404).send() // Nothing but 404 error status
     }else{
-        Todo.findById(todoId).then((todo)=>{
+        Todo.findOne({
+            _id:todoId,
+            _creator:req.user._id
+         }).then((todo)=>{
             if(!todo){
                 //console.log('The ID does not exist')
                 res.status(404).send() // Nothing to send
@@ -66,12 +72,15 @@ app.get('/todos/:id',(req,res)=>{
 })
 
 // Delete todo by id
-app.delete('/todos/:id',(req,res)=>{
+app.delete('/todos/:id',authenticate,(req,res)=>{
     let todoId = req.params.id
     if(!ObjectID.isValid(todoId)){
         res.status(404).send() // Nothing but 404 error status
     }
-        Todo.findByIdAndRemove(todoId).then((todo)=>{
+        Todo.findOneAndRemove({
+            _id:todoId,
+            _creator:req.user._id
+        }).then((todo)=>{
             if(!todo){// If no IDs found
                 res.status(404).send() // Nothing but 404 error status
             } 
@@ -85,7 +94,7 @@ app.delete('/todos/:id',(req,res)=>{
 // Update a todo
 // We are using a PATCH method because we just update few properties. 
 // We could have used PUT if we completely replacing the object.
-app.patch('/todos/:id',(req,res)=>{
+app.patch('/todos/:id',authenticate,(req,res)=>{
     
     let todoId = req.params.id
 
@@ -105,7 +114,7 @@ app.patch('/todos/:id',(req,res)=>{
 
     // Now Update the DB 
     // new:true will make not return the old document which was updated. This is mongoose specific
-    Todo.findByIdAndUpdate(todoId,{$set:body},{new:true}).then((todo)=>{
+    Todo.findOneAndUpdate({_id:todoId,_creator:req.user._id},{$set:body},{new:true}).then((todo)=>{
         if(!todo){
             return res.status(404).send()
         }
