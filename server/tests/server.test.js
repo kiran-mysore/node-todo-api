@@ -1,35 +1,20 @@
 const {ObjectID} = require('mongodb')
 const expect  = require('expect')
 const request = require('supertest')
+const _ = require('lodash')
+
 
 
 const {app} = require('./../server.js')
 const {Todo} = require('./../models/todo.js')
+const{UserModel} = require('./../models/user.js')
+const {todos,populateTodos,users,populateUsers} = require('./seed/seed.js')
 
 //Note: In Mongoose, models can be used to connect to the DBs even the instance of that is not created 
 
-// Create some seed todos
-const todos = [
-    {   
-         _id: new ObjectID(),
-         text: 'This is first todo from seed'
-    },
-    {
-        _id: new ObjectID(),
-        text:'This is second todo from seed',
-        completed:true,
-        completedAt:333
-    }
-];
-
 // Make sure DB  is clean before we test the todos. This run for every test
-beforeEach((done)=> {
-    Todo.remove({}).then(()=>{
-        return Todo.insertMany(todos) // Return a promise
-    }).then(()=>{
-        done()
-    })
-})
+beforeEach(populateUsers)
+beforeEach(populateTodos)
 
 describe('POST /todos',()=>{
     it('should create a new todo',(done)=>{ // done to indicate do it async way
@@ -198,5 +183,90 @@ describe('PATCH /todos/:id',()=>{
             expect(res.body.todo.completedAt).toNotExist()
         })
         .end(done)
+    })
+})
+
+describe('GET /users/me',()=>{
+
+    it('should return a user if authenticated',(done)=>{
+        request(app)
+        .get('/users/me')
+        .set('x-auth',users[0].tokens[0].token)
+        .expect(200)
+        .expect((res)=>{
+            expect(res.body._id).toBe(users[0]._id.toHexString())
+            expect(res.body.email).toBe(users[0].email)
+        })
+        .end(done)
+
+    })
+    it('should return a 401 if not authenticated',(done)=>{
+
+        request(app)
+        .get('/users/me')
+        .expect(401)
+        .expect((res)=>{
+            // expect(_.isEmpty(res.body)) 
+             expect(res.body).toEqual({}) 
+        })
+        .end(done)
+    })
+})
+
+describe('POST /users',()=>{
+
+    it('should create a user',(done)=>{
+        // Create unique email and password
+        let email='example@test.com'
+        let password='example123'
+        request(app)
+        .post('/users')
+        .send({
+            email:email,
+            password:password
+        })
+        .expect(200)
+        .expect((res)=>{
+            expect(res.headers['x-auth']).toExist()
+            expect(res.body._id).toExist()
+            expect(res.body.email).toBe(email)
+        })
+        //.end(done)
+        .end((err)=>{ // custom method
+            if(err){
+                return done(err)
+            }
+
+            UserModel.findOne({email}).then((user)=>{
+                expect(user).toExist()
+                expect(user.password).toNotBe(password) // because the password is hashed and not equal
+                done()
+            })
+        })
+    })
+    it('should return a validation errors if request is invalid',(done)=>{
+        let wrongEmail = 'test'
+        let password='wrong123'
+        request(app)
+        .post('/users')
+        .send({
+            email:wrongEmail,
+            password:password
+        })
+        .expect(400)
+        .end(done)
+    })
+    it('should not create a user if the email is already used',(done)=>{
+        let existingEmail = users[0].email // Getting from the seed data and it exists in the DB
+        let password='admin123'
+
+        request(app)
+        .post('/users')
+        .send({
+            email:existingEmail,
+            password:password
+        })
+        .expect(400)
+        .end(done) 
     })
 })
